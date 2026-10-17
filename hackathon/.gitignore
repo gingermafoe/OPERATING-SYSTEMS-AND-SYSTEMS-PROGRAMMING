@@ -1,0 +1,29 @@
+# Compiled binaries
+bin/
+obj/
+*.o
+*.out
+*.exe
+
+# ProcessScope binary targets
+processcope
+zombie_demo
+orphan_demo
+test_parser
+
+# Python bytecode & environments
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+ENV/
+
+# Editor / OS artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
