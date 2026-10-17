@@ -3,10 +3,29 @@
  * Course: Operating Systems and Systems Programming
  *
  * Implements real-time /proc telemetry polling, sorting, filtering,
- * zombie alerts, and modal inspection.
+ * zombie alerts, and modal inspection with the cinematic cyber design.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Fast, non-blocking Boot Sequence Dismissal
+  const bootSequence = document.getElementById('bootSequence');
+  if (bootSequence) {
+    setTimeout(() => {
+      bootSequence.classList.add('dismissed');
+      setTimeout(() => {
+        bootSequence.style.display = 'none';
+      }, 500);
+    }, 900);
+
+    // Dismiss immediately on user click or keypress
+    window.addEventListener('click', () => {
+      bootSequence.classList.add('dismissed');
+    }, { once: true });
+    window.addEventListener('keydown', () => {
+      bootSequence.classList.add('dismissed');
+    }, { once: true });
+  }
+
   // State variables
   let processes = [];
   let sortColumn = 'pid';
@@ -31,13 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const filteredStats = document.getElementById('filteredStats');
 
   const processTableBody = document.getElementById('processTableBody');
-  const tableHeaders = document.querySelectorAll('.process-table th[data-sort]');
+  const tableHeaders = document.querySelectorAll('.cyber-table th[data-sort]');
   const refreshBtn = document.getElementById('refreshBtn');
-  const refreshIcon = refreshBtn.querySelector('.refresh-icon');
+  const refreshIcon = refreshBtn ? refreshBtn.querySelector('.refresh-svg, .refresh-icon') : null;
   const autoRefreshCheckbox = document.getElementById('autoRefreshCheckbox');
 
-  const connectionBadge = document.getElementById('connectionBadge');
-  const connectionStatus = document.getElementById('connectionStatus');
+  const statusPulseDot = document.getElementById('statusPulseDot');
+  const statusText = document.getElementById('statusText');
   const lastScanTime = document.getElementById('lastScanTime');
 
   const detailModal = document.getElementById('detailModal');
@@ -45,9 +64,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalBody = document.getElementById('modalBody');
   const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
 
-  const theoryModal = document.getElementById('theoryModal');
-  const openTheoryModalBtn = document.getElementById('openTheoryModalBtn');
-  const closeTheoryModalBtn = document.getElementById('closeTheoryModalBtn');
+  // Navigation active highlighting on scroll
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section[id]');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    const scrollY = window.pageYOffset;
+
+    sections.forEach(section => {
+      const sectionHeight = section.offsetHeight;
+      const sectionTop = section.offsetTop - 120;
+      if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+        current = section.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('active');
+      }
+    });
+  });
 
   /**
    * Fetches latest process table from local Python API.
@@ -55,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function fetchProcesses() {
     if (isFetching) return;
     isFetching = true;
-    refreshIcon.classList.add('spinning');
+    if (refreshIcon) refreshIcon.classList.add('spinning');
 
     try {
       const response = await fetch('/api/processes', { cache: 'no-store' });
@@ -79,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Update Timestamp
       if (data.timestamp) {
         const d = new Date(data.timestamp * 1000);
-        lastScanTime.textContent = d.toLocaleTimeString();
+        if (lastScanTime) lastScanTime.textContent = d.toLocaleTimeString();
       }
 
       // Render Table
@@ -93,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } finally {
       isFetching = false;
-      refreshIcon.classList.remove('spinning');
+      if (refreshIcon) refreshIcon.classList.remove('spinning');
     }
   }
 
@@ -106,18 +145,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const adopted = counts.adopted_candidates ?? processes.filter(p => p.classification === 'adopted_candidate').length;
     const standard = counts.standard ?? (total - zombies - adopted);
 
-    valTotal.textContent = total;
-    valZombies.textContent = zombies;
-    valAdopted.textContent = adopted;
-    valStandard.textContent = standard;
+    if (valTotal) valTotal.textContent = total;
+    if (valZombies) valZombies.textContent = zombies;
+    if (valAdopted) valAdopted.textContent = adopted;
+    if (valStandard) valStandard.textContent = standard;
 
     // Zombie alert banner
-    if (zombies > 0) {
-      zombieAlertBanner.style.display = 'flex';
-      zombieAlertTitle.textContent = `${zombies} Active Zombie Process${zombies > 1 ? 'es' : ''} Detected!`;
-      zombieAlertDesc.textContent = `Found ${zombies} process(es) in state 'Z'. The parent has terminated without wait()/waitpid() or is delaying reaping.`;
-    } else {
-      zombieAlertBanner.style.display = 'none';
+    if (zombieAlertBanner) {
+      if (zombies > 0) {
+        zombieAlertBanner.style.display = 'flex';
+        if (zombieAlertTitle) zombieAlertTitle.textContent = `${zombies} Active Zombie Process${zombies > 1 ? 'es' : ''} Detected!`;
+        if (zombieAlertDesc) zombieAlertDesc.textContent = `Found ${zombies} process(es) in state 'Z'. The parent has terminated without wait()/waitpid() or is delaying reaping.`;
+      } else {
+        zombieAlertBanner.style.display = 'none';
+      }
     }
   }
 
@@ -125,15 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
    * Updates live connection indicator.
    */
   function setConnectionStatus(isLive, message = '') {
-    const dot = connectionBadge.querySelector('.status-dot');
-    if (isLive) {
-      dot.className = 'status-dot live';
-      connectionStatus.textContent = 'Live';
-      connectionBadge.title = 'Connected to C scanner backend';
-    } else {
-      dot.className = 'status-dot error';
-      connectionStatus.textContent = 'Offline';
-      connectionBadge.title = message || 'Connection lost';
+    if (statusPulseDot) {
+      if (isLive) {
+        statusPulseDot.className = 'status-pulse-dot live';
+        if (statusText) statusText.textContent = 'LIVE /PROC';
+      } else {
+        statusPulseDot.className = 'status-pulse-dot error';
+        if (statusText) statusText.textContent = 'OFFLINE';
+      }
     }
   }
 
@@ -141,16 +181,17 @@ document.addEventListener('DOMContentLoaded', () => {
    * Filters and sorts process list.
    */
   function getFilteredAndSortedProcesses() {
-    const query = searchInput.value.trim().toLowerCase();
-    const classFilter = classificationFilter.value;
-    const stFilter = stateFilter.value;
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const classFilter = classificationFilter ? classificationFilter.value : 'all';
+    const stFilter = stateFilter ? stateFilter.value : 'all';
 
     let filtered = processes.filter(p => {
       // Search by PID or Name
       if (query) {
         const matchPid = p.pid.toString().includes(query);
+        const matchPpid = p.ppid.toString().includes(query);
         const matchName = p.name.toLowerCase().includes(query);
-        if (!matchPid && !matchName) return false;
+        if (!matchPid && !matchPpid && !matchName) return false;
       }
 
       // Classification Filter
@@ -188,15 +229,16 @@ document.addEventListener('DOMContentLoaded', () => {
    * Renders the process table rows.
    */
   function renderTable() {
+    if (!processTableBody) return;
     const filtered = getFilteredAndSortedProcesses();
-    filteredStats.textContent = `Showing ${filtered.length} of ${processes.length}`;
+    if (filteredStats) filteredStats.textContent = `Showing ${filtered.length} of ${processes.length}`;
 
     if (filtered.length === 0) {
       processTableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="state-cell">
-            <div>No matching processes found.</div>
-            <div style="font-size:0.75rem; margin-top:0.25rem;">Try adjusting your search query or filters.</div>
+          <td colspan="6" class="table-loading-cell">
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.35rem;">No matching processes found</div>
+            <div style="font-size:0.78rem; color: var(--text-muted);">Try adjusting your search query, state, or classification filters.</div>
           </td>
         </tr>
       `;
@@ -208,33 +250,33 @@ document.addEventListener('DOMContentLoaded', () => {
       const rowClass = isZombie ? 'row-zombie' : '';
 
       // State badge
-      let stateBadgeClass = 'badge-state-s';
-      if (p.state === 'Z') stateBadgeClass = 'badge-state-z';
-      else if (p.state === 'R') stateBadgeClass = 'badge-state-r';
+      let stateBadgeClass = 'c-badge-state-s';
+      if (p.state === 'Z') stateBadgeClass = 'c-badge-state-z';
+      else if (p.state === 'R') stateBadgeClass = 'c-badge-state-r';
 
       // Classification badge
-      let classBadge = '<span class="badge badge-class-standard">Standard</span>';
+      let classBadge = '<span class="c-badge c-badge-class-standard">Standard</span>';
       if (p.classification === 'zombie') {
-        classBadge = '<span class="badge badge-class-zombie">ZOMBIE</span>';
+        classBadge = '<span class="c-badge c-badge-class-zombie">ZOMBIE</span>';
       } else if (p.classification === 'adopted_candidate') {
-        classBadge = '<span class="badge badge-class-adopted">Adopted Candidate</span>';
+        classBadge = '<span class="c-badge c-badge-class-adopted">Adopted Candidate</span>';
       }
 
       const escapedName = escapeHtml(p.name);
 
       return `
         <tr class="${rowClass}">
-          <td class="mono-cell">${p.pid}</td>
-          <td class="mono-cell">${p.ppid}</td>
+          <td class="font-mono">${p.pid}</td>
+          <td class="font-mono">${p.ppid}</td>
           <td>
-            <span class="badge ${stateBadgeClass}" title="${escapeHtml(p.state_desc || '')}">
+            <span class="c-badge ${stateBadgeClass}" title="${escapeHtml(p.state_desc || '')}">
               ${p.state}
             </span>
           </td>
           <td>${classBadge}</td>
-          <td class="mono-cell" title="${escapedName}">${escapedName}</td>
+          <td class="font-mono" title="${escapedName}">${escapedName}</td>
           <td>
-            <button class="btn-inspect" data-pid="${p.pid}">Inspect</button>
+            <button class="btn-table-inspect" data-pid="${p.pid}">Inspect</button>
           </td>
         </tr>
       `;
@@ -243,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     processTableBody.innerHTML = rowsHtml;
 
     // Attach inspect listeners
-    const inspectBtns = processTableBody.querySelectorAll('.btn-inspect');
+    const inspectBtns = processTableBody.querySelectorAll('.btn-table-inspect');
     inspectBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         const pid = parseInt(e.currentTarget.getAttribute('data-pid'), 10);
@@ -256,13 +298,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderErrorState(message) {
+    if (!processTableBody) return;
     processTableBody.innerHTML = `
       <tr>
-        <td colspan="6" class="state-cell" style="color: var(--color-danger);">
-          <div style="font-weight: 600; margin-bottom: 0.25rem;">Unable to connect to ProcessScope scanner</div>
+        <td colspan="6" class="table-loading-cell" style="color: var(--color-danger);">
+          <div style="font-weight: 700; margin-bottom: 0.35rem; color: #FFFFFF;">Unable to connect to ProcessScope scanner</div>
           <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(message)}</div>
           <div style="margin-top: 1rem;">
-            <button class="btn btn-secondary" onclick="window.location.reload()">Retry Connection</button>
+            <button class="btn-table-inspect" onclick="window.location.reload()">Retry Connection</button>
           </div>
         </td>
       </tr>
@@ -273,7 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
    * Opens the process inspection modal with conceptual explanation.
    */
   function openDetailModal(p) {
-    modalTitle.textContent = `Process Details — PID ${p.pid} (${p.name})`;
+    if (!detailModal || !modalBody) return;
+    if (modalTitle) modalTitle.textContent = `PROCESS // PID ${p.pid} (${p.name})`;
 
     let explanation = '';
     if (p.classification === 'zombie') {
@@ -292,33 +336,33 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     } else {
       explanation = `
-        <strong>Standard Process:</strong>
+        <strong>Standard Active Task:</strong>
         Active process functioning with active parent PID ${p.ppid}.
       `;
     }
 
     modalBody.innerHTML = `
-      <div class="detail-row">
-        <span class="detail-label">Process ID (PID):</span>
-        <span class="detail-value">${p.pid}</span>
+      <div class="cyber-detail-row">
+        <span class="detail-k">Process ID (PID):</span>
+        <span class="detail-v">${p.pid}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Parent PID (PPID):</span>
-        <span class="detail-value">${p.ppid}</span>
+      <div class="cyber-detail-row">
+        <span class="detail-k">Parent PID (PPID):</span>
+        <span class="detail-v">${p.ppid}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Executable Name:</span>
-        <span class="detail-value">${escapeHtml(p.name)}</span>
+      <div class="cyber-detail-row">
+        <span class="detail-k">Command / Executable:</span>
+        <span class="detail-v">${escapeHtml(p.name)}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Linux Process State:</span>
-        <span class="detail-value">${p.state} (${escapeHtml(p.state_desc || 'Unknown')})</span>
+      <div class="cyber-detail-row">
+        <span class="detail-k">Linux Process State:</span>
+        <span class="detail-v">${p.state} (${escapeHtml(p.state_desc || 'Unknown')})</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Classification:</span>
-        <span class="detail-value">${escapeHtml(p.classification)}</span>
+      <div class="cyber-detail-row">
+        <span class="detail-k">Classification:</span>
+        <span class="detail-v">${escapeHtml(p.classification)}</span>
       </div>
-      <div class="detail-explanation">
+      <div class="cyber-detail-box">
         ${explanation}
       </div>
     `;
@@ -327,15 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeDetailModal() {
-    detailModal.style.display = 'none';
-  }
-
-  function openTheoryModal() {
-    theoryModal.style.display = 'flex';
-  }
-
-  function closeTheoryModal() {
-    theoryModal.style.display = 'none';
+    if (detailModal) detailModal.style.display = 'none';
   }
 
   function escapeHtml(str) {
@@ -349,21 +385,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Event Listeners
-  refreshBtn.addEventListener('click', fetchProcesses);
+  if (refreshBtn) refreshBtn.addEventListener('click', fetchProcesses);
 
-  searchInput.addEventListener('input', () => {
-    clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
-    renderTable();
-  });
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      if (clearSearchBtn) clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
+      renderTable();
+    });
+  }
 
-  clearSearchBtn.addEventListener('click', () => {
-    searchInput.value = '';
-    clearSearchBtn.style.display = 'none';
-    renderTable();
-  });
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      clearSearchBtn.style.display = 'none';
+      renderTable();
+    });
+  }
 
-  classificationFilter.addEventListener('change', renderTable);
-  stateFilter.addEventListener('change', renderTable);
+  if (classificationFilter) classificationFilter.addEventListener('change', renderTable);
+  if (stateFilter) stateFilter.addEventListener('change', renderTable);
 
   // Sorting header click
   tableHeaders.forEach(th => {
@@ -376,13 +416,13 @@ document.addEventListener('DOMContentLoaded', () => {
         sortAsc = true;
       }
 
-      // Update arrow icons
+      // Update sort icons
       tableHeaders.forEach(h => {
-        const arrow = h.querySelector('.sort-arrow');
+        const icon = h.querySelector('.sort-icon');
         if (h === th) {
-          arrow.textContent = sortAsc ? ' ▲' : ' ▼';
+          icon.textContent = sortAsc ? ' ▲' : ' ▼';
         } else {
-          arrow.textContent = '';
+          icon.textContent = '';
         }
       });
 
@@ -390,31 +430,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Modals
-  closeDetailModalBtn.addEventListener('click', closeDetailModal);
-  closeTheoryModalBtn.addEventListener('click', closeTheoryModal);
-  openTheoryModalBtn.addEventListener('click', openTheoryModal);
+  // Modal close
+  if (closeDetailModalBtn) closeDetailModalBtn.addEventListener('click', closeDetailModal);
 
   window.addEventListener('click', (e) => {
     if (e.target === detailModal) closeDetailModal();
-    if (e.target === theoryModal) closeTheoryModal();
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeDetailModal();
-      closeTheoryModal();
-    }
+    if (e.key === 'Escape') closeDetailModal();
   });
 
   // Auto-refresh control
   function startAutoRefresh() {
     stopAutoRefresh();
     autoRefreshTimer = setInterval(() => {
-      // Don't auto-refresh if modal is open or user is actively typing in search
-      if (detailModal.style.display === 'flex' || theoryModal.style.display === 'flex') {
-        return;
-      }
+      if (detailModal && detailModal.style.display === 'flex') return;
       fetchProcesses();
     }, 3000);
   }
@@ -426,17 +457,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  autoRefreshCheckbox.addEventListener('change', () => {
-    if (autoRefreshCheckbox.checked) {
-      startAutoRefresh();
-    } else {
-      stopAutoRefresh();
-    }
-  });
+  if (autoRefreshCheckbox) {
+    autoRefreshCheckbox.addEventListener('change', () => {
+      if (autoRefreshCheckbox.checked) {
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
+    });
+  }
 
   // Initial load
   fetchProcesses();
-  if (autoRefreshCheckbox.checked) {
+  if (autoRefreshCheckbox && autoRefreshCheckbox.checked) {
     startAutoRefresh();
   }
 });

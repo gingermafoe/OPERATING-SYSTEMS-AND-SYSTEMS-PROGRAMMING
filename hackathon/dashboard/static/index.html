@@ -3,280 +3,584 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ProcessScope — Zombie &amp; Orphan Process Detection System</title>
+  <title>ProcessScope — Linux Process Intelligence &amp; Zombie/Orphan Detection</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  <div class="app-layout">
-    <!-- Top Navigation Header -->
-    <header class="top-nav">
-      <div class="nav-brand">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-            <circle cx="8" cy="10" r="1.5" fill="currentColor"></circle>
-            <circle cx="16" cy="10" r="1.5" fill="currentColor"></circle>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <h1 class="brand-title">ProcessScope</h1>
-          <span class="brand-subtitle">Zombie &amp; Orphan Process Detection System</span>
-        </div>
+<body class="cyber-theme">
+  <!-- System Boot Sequence Overlay (Fast, Elegant, Non-blocking) -->
+  <div id="bootSequence" class="boot-sequence-overlay">
+    <div class="boot-terminal">
+      <div class="boot-header">
+        <span class="boot-led"></span>
+        <span class="boot-title">PROCESSSCOPE_SYSTEM_KERNEL // BOOT SEQUENCE</span>
       </div>
+      <div class="boot-log" id="bootLog">
+        <p class="boot-line active">[INIT] Mounting virtual filesystem /proc interface...</p>
+        <p class="boot-line">[CORE] Loading C11 process relationship scanner...</p>
+        <p class="boot-line">[AUTH] PID/PPID hierarchy graph initialized.</p>
+        <p class="boot-line glow">[OK] LINUX PROCESS INTELLIGENCE ACTIVE.</p>
+      </div>
+    </div>
+  </div>
 
-      <div class="nav-controls">
-        <div class="status-indicator-badge" id="connectionBadge">
-          <span class="status-dot live"></span>
-          <span class="status-label" id="connectionStatus">Connected</span>
+  <!-- Background Ambience & Technical Grid -->
+  <div class="ambient-glow glow-top-right"></div>
+  <div class="ambient-glow glow-bottom-right"></div>
+  <div class="technical-grid-bg"></div>
+  <div class="vertical-architecture-lines">
+    <div class="arch-line line-1"></div>
+    <div class="arch-line line-2"></div>
+    <div class="arch-line line-3"></div>
+    <div class="arch-line line-4"></div>
+  </div>
+
+  <div class="site-wrapper">
+    <!-- Slim, Transparent Premium Navigation Bar -->
+    <header class="cyber-nav" id="topNav">
+      <div class="nav-container">
+        <!-- Wordmark -->
+        <a href="#hero" class="nav-brand">
+          <span class="brand-text">PROCESSSCOPE</span>
+          <span class="brand-chip">v1.0.0</span>
+        </a>
+
+        <!-- Center Nav Links -->
+        <nav class="nav-links">
+          <a href="#hero" class="nav-link active">Overview</a>
+          <a href="#monitor" class="nav-link">Process Monitor</a>
+          <a href="#lifecycle" class="nav-link">Detection</a>
+          <a href="#architecture" class="nav-link">Architecture</a>
+        </nav>
+
+        <!-- Right CTA Button & Live Status -->
+        <div class="nav-actions">
+          <div class="nav-status-pill" id="navConnectionStatus" title="Authoritative C scanner status">
+            <span class="status-pulse-dot live" id="statusPulseDot"></span>
+            <span class="status-text" id="statusText">LIVE /PROC</span>
+          </div>
+
+          <a href="#monitor" class="btn-pill-action">
+            <span>Launch Monitor</span>
+            <svg class="pill-arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
         </div>
-
-        <div class="auto-refresh-toggle">
-          <label class="toggle-switch">
-            <input type="checkbox" id="autoRefreshCheckbox" checked>
-            <span class="slider"></span>
-          </label>
-          <span class="toggle-label">Auto-refresh (3s)</span>
-        </div>
-
-        <button class="btn btn-secondary" id="refreshBtn" title="Scan /proc now">
-          <svg class="refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-          </svg>
-          <span>Refresh</span>
-        </button>
-
-        <button class="btn btn-ghost" id="openTheoryModalBtn" title="View OS Detection Concepts">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          <span>Concepts</span>
-        </button>
       </div>
     </header>
 
-    <!-- Main Dashboard Container -->
-    <main class="main-content">
-      <!-- Alert Banner (shown when Zombies detected) -->
-      <div class="alert-banner" id="zombieAlertBanner" style="display: none;">
-        <div class="alert-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </div>
-        <div class="alert-body">
-          <strong id="zombieAlertTitle">Active Zombie Process Detected!</strong>
-          <span id="zombieAlertDesc">Defunct process found with State 'Z' awaiting parent waitpid(). Inspect table below.</span>
-        </div>
-      </div>
+    <!-- Main Content Flow -->
+    <main class="main-body">
+      <!-- HERO SECTION -->
+      <section class="hero-section" id="hero">
+        <div class="hero-container">
+          <!-- LEFT COLUMN: Cinematic Typography & CTAs -->
+          <div class="hero-content">
+            <div class="hero-badge">
+              <span class="badge-dot"></span>
+              <span class="badge-text">LINUX PROCESS INTELLIGENCE</span>
+            </div>
 
-      <!-- Metric Cards Grid -->
-      <section class="metrics-grid">
-        <div class="metric-card" id="cardTotal">
-          <div class="metric-header">
-            <span class="metric-title">Total Active Processes</span>
-            <div class="metric-icon total">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
+            <h1 class="hero-headline">
+              SEE BEYOND<br>
+              <span class="headline-gradient">THE PROCESS.</span><br>
+              DETECT THE THREAT.
+            </h1>
+
+            <p class="hero-subtext">
+              Observe Linux process lifecycles, identify zombie and orphan processes, and understand what's happening beneath the system.
+            </p>
+
+            <div class="hero-cta-group">
+              <a href="#monitor" class="btn-hero-primary">
+                <span>EXPLORE MONITOR</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+
+              <a href="#architecture" class="btn-hero-secondary">
+                <span>VIEW ARCHITECTURE</span>
+              </a>
+            </div>
+
+            <!-- Bottom Information Strip -->
+            <div class="hero-info-strip">
+              <div class="strip-icon-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </div>
+              <div class="strip-text-box">
+                <span class="strip-title">LIVE PROCESS INTELLIGENCE</span>
+                <span class="strip-desc">Non-invasive Linux /proc virtual filesystem scanning engine extracting real-time PID, PPID, state, and relationship hierarchy.</span>
+              </div>
             </div>
           </div>
-          <div class="metric-value" id="valTotal">--</div>
-          <div class="metric-subtext">Scanned via Linux /proc</div>
+
+          <!-- RIGHT COLUMN: 3D Glass & Chrome Visual with Floating Technical Annotations -->
+          <div class="hero-visual-wrapper">
+            <div class="hero-visual-frame">
+              <div class="visual-glow-backdrop"></div>
+              
+              <!-- 3D Process Core Image -->
+              <div class="visual-image-container">
+                <img src="assets/cyber_process_core.jpg" alt="ProcessScope 3D Glass Cyber Process Core" class="core-3d-image">
+                <div class="core-radial-overlay"></div>
+              </div>
+
+              <!-- Connecting SVG Technical Lines -->
+              <svg class="visual-connecting-lines" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Line 1 to Lifecycle Card -->
+                <path d="M 120 130 L 190 190 L 250 210" stroke="rgba(101, 223, 255, 0.45)" stroke-width="1.5" stroke-dasharray="3 3" />
+                <circle cx="250" cy="210" r="3.5" fill="#65DFFF" />
+
+                <!-- Line 2 to Zombie Card -->
+                <path d="M 480 270 L 410 280 L 360 300" stroke="rgba(239, 68, 68, 0.6)" stroke-width="1.5" stroke-dasharray="3 3" />
+                <circle cx="360" cy="300" r="3.5" fill="#EF4444" />
+
+                <!-- Line 3 to Orphan Card -->
+                <path d="M 110 470 L 190 440 L 270 410" stroke="rgba(59, 130, 246, 0.6)" stroke-width="1.5" stroke-dasharray="3 3" />
+                <circle cx="270" cy="410" r="3.5" fill="#3B82F6" />
+              </svg>
+
+              <!-- Floating Glass Tag 1: PROCESS LIFECYCLE -->
+              <div class="floating-glass-tag tag-lifecycle">
+                <div class="tag-header">
+                  <span class="tag-pip pip-cyan"></span>
+                  <span class="tag-title">PROCESS LIFECYCLE</span>
+                </div>
+                <div class="tag-body">
+                  <span>fork() &rarr; exec() &rarr; exit()</span>
+                </div>
+              </div>
+
+              <!-- Floating Glass Tag 2: ZOMBIE DETECTION -->
+              <div class="floating-glass-tag tag-zombie">
+                <div class="tag-header">
+                  <span class="tag-pip pip-red"></span>
+                  <span class="tag-title">ZOMBIE DETECTION</span>
+                </div>
+                <div class="tag-body">
+                  <span>State 'Z' &bull; Defunct PCB awaiting wait()</span>
+                </div>
+              </div>
+
+              <!-- Floating Glass Tag 3: ORPHAN TRACKING -->
+              <div class="floating-glass-tag tag-orphan">
+                <div class="tag-header">
+                  <span class="tag-pip pip-blue"></span>
+                  <span class="tag-title">ORPHAN TRACKING</span>
+                </div>
+                <div class="tag-body">
+                  <span>Parent exit &rarr; Reparented to init / subreaper</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION A: LIVE PROCESS MONITOR -->
+      <section class="section-container" id="monitor">
+        <div class="section-header">
+          <div class="section-tag">
+            <span class="tag-dot"></span>
+            <span>SYSTEM TELEMETRY</span>
+          </div>
+          <h2 class="section-title">LIVE PROCESS MONITOR</h2>
+          <p class="section-desc">Authoritative process telemetry collected directly from Linux <code>/proc/[pid]/stat</code> by the C11 scanner.</p>
         </div>
 
-        <div class="metric-card metric-danger" id="cardZombies">
-          <div class="metric-header">
-            <span class="metric-title">Zombie Processes (Z)</span>
-            <div class="metric-icon danger">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- Alert Banner (Appears dynamically if Zombie detected) -->
+        <div class="cyber-alert-banner" id="zombieAlertBanner" style="display: none;">
+          <div class="alert-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="alert-content-wrap">
+            <strong id="zombieAlertTitle">Active Zombie Process Detected!</strong>
+            <span id="zombieAlertDesc">Defunct task found with state 'Z'. Parent has not invoked waitpid(). Inspect highlighted row below.</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Metric Cards Grid -->
+        <div class="telemetry-grid">
+          <!-- Total Processes -->
+          <div class="telemetry-card">
+            <div class="card-inner">
+              <div class="card-top">
+                <span class="card-label">TOTAL ACCESSIBLE</span>
+                <div class="card-chip chip-blue">/proc</div>
+              </div>
+              <div class="card-value font-mono" id="valTotal">--</div>
+              <div class="card-footer-info">Active kernel process records</div>
+            </div>
+          </div>
+
+          <!-- Zombie Count -->
+          <div class="telemetry-card card-alert-danger" id="cardZombie">
+            <div class="card-inner">
+              <div class="card-top">
+                <span class="card-label">ZOMBIE PROCESSES (Z)</span>
+                <div class="card-chip chip-red">DEFUNCT</div>
+              </div>
+              <div class="card-value font-mono danger-glow" id="valZombies">0</div>
+              <div class="card-footer-info">Un-reaped PCB in process table</div>
+            </div>
+          </div>
+
+          <!-- Adopted Candidates (PPID 1) -->
+          <div class="telemetry-card card-alert-warning">
+            <div class="card-inner">
+              <div class="card-top">
+                <span class="card-label">ADOPTED CANDIDATES</span>
+                <div class="card-chip chip-cyan">PPID 1</div>
+              </div>
+              <div class="card-value font-mono warning-glow" id="valAdopted">--</div>
+              <div class="card-footer-info">Reparented or init-spawned daemons</div>
+            </div>
+          </div>
+
+          <!-- Standard Active -->
+          <div class="telemetry-card">
+            <div class="card-inner">
+              <div class="card-top">
+                <span class="card-label">STANDARD TASKS</span>
+                <div class="card-chip chip-muted">ACTIVE</div>
+              </div>
+              <div class="card-value font-mono" id="valStandard">--</div>
+              <div class="card-footer-info">Normal parent-child lineage</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Filtering & Search Controls -->
+        <div class="cyber-table-panel">
+          <div class="table-controls-bar">
+            <!-- Search Input -->
+            <div class="cyber-search-box">
+              <svg class="search-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Search by PID, PPID, or command name..." autocomplete="off">
+              <button class="clear-btn" id="clearSearchBtn" style="display: none;">&times;</button>
+            </div>
+
+            <!-- Classification Filter -->
+            <div class="control-dropdown">
+              <label for="classificationFilter" class="dropdown-label">CLASS:</label>
+              <select id="classificationFilter" class="cyber-select">
+                <option value="all">All Classifications</option>
+                <option value="zombie">Zombie (Z)</option>
+                <option value="adopted_candidate">Adopted Candidate (PPID 1)</option>
+                <option value="standard">Standard</option>
+              </select>
+            </div>
+
+            <!-- State Filter -->
+            <div class="control-dropdown">
+              <label for="stateFilter" class="dropdown-label">STATE:</label>
+              <select id="stateFilter" class="cyber-select">
+                <option value="all">All States</option>
+                <option value="R">R (Running)</option>
+                <option value="S">S (Sleeping)</option>
+                <option value="Z">Z (Zombie)</option>
+                <option value="D">D (Disk Sleep)</option>
+                <option value="T">T (Stopped)</option>
+                <option value="I">I (Idle Kernel)</option>
+              </select>
+            </div>
+
+            <!-- Polling Toggle & Manual Refresh -->
+            <div class="control-actions">
+              <label class="auto-refresh-switch" title="Auto-poll /proc every 3 seconds">
+                <input type="checkbox" id="autoRefreshCheckbox" checked>
+                <span class="switch-track"></span>
+                <span class="switch-label">Live 3s</span>
+              </label>
+
+              <button class="btn-icon-refresh" id="refreshBtn" title="Poll /proc now">
+                <svg class="refresh-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span>Poll</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Process Table -->
+          <div class="table-scroll-container">
+            <table class="cyber-table" id="processTable">
+              <thead>
+                <tr>
+                  <th class="th-sortable" data-sort="pid">PID <span class="sort-icon"></span></th>
+                  <th class="th-sortable" data-sort="ppid">PPID <span class="sort-icon"></span></th>
+                  <th class="th-sortable" data-sort="state">STATE <span class="sort-icon"></span></th>
+                  <th class="th-sortable" data-sort="classification">CLASSIFICATION <span class="sort-icon"></span></th>
+                  <th class="th-sortable" data-sort="name">COMMAND / EXECUTABLE <span class="sort-icon"></span></th>
+                  <th class="th-action">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="processTableBody">
+                <tr>
+                  <td colspan="6" class="table-loading-cell">
+                    <div class="cyber-spinner"></div>
+                    <span class="loading-label">Connecting to ProcessScope Linux scanner...</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer -->
+          <div class="table-meta-footer">
+            <div class="meta-left">
+              <span id="filteredStats">Showing 0 of 0</span>
+              <span class="meta-sep">&bull;</span>
+              <span class="meta-auth">Source: <code>/proc/[pid]/stat</code> via C11 Engine</span>
+            </div>
+            <div class="meta-right">
+              Last Scan: <span id="lastScanTime" class="font-mono">Never</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION B: PROCESS LIFECYCLE -->
+      <section class="section-container" id="lifecycle">
+        <div class="section-header">
+          <div class="section-tag">
+            <span class="tag-dot"></span>
+            <span>OS INTERNALS</span>
+          </div>
+          <h2 class="section-title">PROCESS LIFECYCLE &amp; ANOMALY MECHANICS</h2>
+          <p class="section-desc">Understanding kernel-level process state transitions and why zombie and orphan conditions occur in multi-tasking environments.</p>
+        </div>
+
+        <div class="lifecycle-cards-grid">
+          <!-- Step 1: Process Creation -->
+          <div class="lifecycle-card">
+            <div class="lc-badge">PHASE 01</div>
+            <h3 class="lc-title">Creation (fork &amp; execve)</h3>
+            <p class="lc-text">
+              The parent process executes <code>fork()</code>, cloning its address space and creating a child with a unique PID. The child replaces its memory image via <code>execve()</code> and commences execution.
+            </p>
+            <div class="lc-meta font-mono">State: 'R' (Running) or 'S' (Sleeping)</div>
+          </div>
+
+          <!-- Step 2: Termination & Exit -->
+          <div class="lifecycle-card">
+            <div class="lc-badge">PHASE 02</div>
+            <h3 class="lc-title">Termination (exit)</h3>
+            <p class="lc-text">
+              The child calls <code>exit(code)</code>. The Linux kernel frees its virtual memory, stack, heap, and open file descriptors. However, its <strong>Process Control Block (PCB)</strong> must be retained.
+            </p>
+            <div class="lc-meta font-mono">Kernel retains 32-bit exit status</div>
+          </div>
+
+          <!-- Step 3: Zombie State -->
+          <div class="lifecycle-card card-highlight-red">
+            <div class="lc-badge badge-red">ANOMALY: ZOMBIE</div>
+            <h3 class="lc-title">Zombie State ('Z' / Defunct)</h3>
+            <p class="lc-text">
+              Until the parent process invokes <code>wait()</code> or <code>waitpid()</code>, the terminated child exists as a zombie. While consuming zero CPU and RAM, it permanently reserves a PID slot in the kernel table.
+            </p>
+            <div class="lc-meta font-mono danger-text">Risk: Exhausts /proc/sys/kernel/pid_max</div>
+          </div>
+
+          <!-- Step 4: Reaping vs Orphanhood -->
+          <div class="lifecycle-card card-highlight-blue">
+            <div class="lc-badge badge-blue">ANOMALY: ORPHAN</div>
+            <h3 class="lc-title">Orphan Reparenting</h3>
+            <p class="lc-text">
+              If the parent terminates before the child, the surviving child becomes an orphan. The Linux kernel automatically reparents the child to <code>init</code> (PID 1) or an active ancestor <em>subreaper</em>.
+            </p>
+            <div class="lc-meta font-mono cyan-text">Mechanism: prctl(PR_SET_CHILD_SUBREAPER)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION C: SYSTEM ARCHITECTURE -->
+      <section class="section-container" id="architecture">
+        <div class="section-header">
+          <div class="section-tag">
+            <span class="tag-dot"></span>
+            <span>PIPELINE DESIGN</span>
+          </div>
+          <h2 class="section-title">SYSTEM ARCHITECTURE</h2>
+          <p class="section-desc">Minimalist, high-performance data pipeline from Linux kernel space to browser presentation.</p>
+        </div>
+
+        <div class="architecture-flow-panel">
+          <div class="arch-flow-diagram">
+            <!-- Node 1 -->
+            <div class="arch-node">
+              <div class="node-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                </svg>
+              </div>
+              <h4 class="node-title">Linux /proc VFS</h4>
+              <p class="node-desc">Virtual kernel filesystem exposing <code>/proc/[pid]/stat</code> records.</p>
+              <span class="node-tag">Kernel Space</span>
+            </div>
+
+            <div class="arch-connector">&rarr;</div>
+
+            <!-- Node 2 -->
+            <div class="arch-node">
+              <div class="node-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+              </div>
+              <h4 class="node-title">C11 Core Scanner</h4>
+              <p class="node-desc">Rightmost parenthesis delimiter parser extracting PID, PPID, state, and comm.</p>
+              <span class="node-tag">Compiled Binary</span>
+            </div>
+
+            <div class="arch-connector">&rarr;</div>
+
+            <!-- Node 3 -->
+            <div class="arch-node">
+              <div class="node-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                </svg>
+              </div>
+              <h4 class="node-title">Python Stdlib API</h4>
+              <p class="node-desc">Safe local HTTP server invoking binary with zero shell interpretation on 127.0.0.1.</p>
+              <span class="node-tag">REST Gateway</span>
+            </div>
+
+            <div class="arch-connector">&rarr;</div>
+
+            <!-- Node 4 -->
+            <div class="arch-node">
+              <div class="node-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </div>
+              <h4 class="node-title">Web Dashboard</h4>
+              <p class="node-desc">Cinematic cybersecurity landing page with real-time reactive telemetry.</p>
+              <span class="node-tag">Frontend UI</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION D: DETECTION DETAILS & METHODOLOGY -->
+      <section class="section-container" id="detection">
+        <div class="section-header">
+          <div class="section-tag">
+            <span class="tag-dot"></span>
+            <span>VERIFIED METHODOLOGY</span>
+          </div>
+          <h2 class="section-title">DETECTION LOGIC &amp; CONTROLLED FIXTURES</h2>
+          <p class="section-desc">Distinguishing verified runtime observations from point-in-time snapshot heuristics.</p>
+        </div>
+
+        <div class="detection-grid">
+          <!-- Item 1 -->
+          <div class="detection-card">
+            <div class="d-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+            </div>
+            <h3 class="d-title">Rightmost Parenthesis Delimiter Rule</h3>
+            <p class="d-text">
+              In Linux <code>/proc/[pid]/stat</code>, the process command name is enclosed in parentheses and may contain spaces or nested parentheses (e.g., <code>(worker (gpu) thread)</code>). ProcessScope isolates the name by finding the first <code>(</code> and the <strong>terminal <code>)</code></strong>, preventing token corruption.
+            </p>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="detection-card">
+            <div class="d-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
             </div>
+            <h3 class="d-title">Snapshot Heuristic vs. Historical Truth</h3>
+            <p class="d-text">
+              A single snapshot showing <code>PPID == 1</code> cannot mathematically prove a process was orphaned; standard system services (e.g. <code>cron</code>, <code>dbus</code>) are spawned directly by PID 1. ProcessScope responsibly labels these as <strong>adopted_candidate</strong> rather than falsely asserting orphanhood.
+            </p>
           </div>
-          <div class="metric-value danger-text" id="valZombies">0</div>
-          <div class="metric-subtext">Terminated; un-reaped PCB in table</div>
-        </div>
 
-        <div class="metric-card metric-warning" id="cardAdopted">
-          <div class="metric-header">
-            <span class="metric-title">Adopted Candidates</span>
-            <div class="metric-icon warning">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          <!-- Item 3 -->
+          <div class="detection-card">
+            <div class="d-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
               </svg>
             </div>
-          </div>
-          <div class="metric-value warning-text" id="valAdopted">--</div>
-          <div class="metric-subtext">PPID 1 (Candidate reparented or daemon)</div>
-        </div>
-
-        <div class="metric-card" id="cardStandard">
-          <div class="metric-header">
-            <span class="metric-title">Standard Processes</span>
-            <div class="metric-icon standard">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-              </svg>
-            </div>
-          </div>
-          <div class="metric-value" id="valStandard">--</div>
-          <div class="metric-subtext">Normal parent-child hierarchy</div>
-        </div>
-      </section>
-
-      <!-- Search, Filter & Controls Bar -->
-      <section class="table-controls-card">
-        <div class="search-box">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="searchInput" placeholder="Search by PID or process name..." autocomplete="off">
-          <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">&times;</button>
-        </div>
-
-        <div class="filter-group">
-          <label for="classificationFilter" class="filter-label">Classification:</label>
-          <select id="classificationFilter" class="custom-select">
-            <option value="all">All Classifications</option>
-            <option value="zombie">Zombie (Z)</option>
-            <option value="adopted_candidate">Adopted Candidate (PPID 1)</option>
-            <option value="standard">Standard</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="stateFilter" class="filter-label">State:</label>
-          <select id="stateFilter" class="custom-select">
-            <option value="all">All States</option>
-            <option value="R">R (Running)</option>
-            <option value="S">S (Sleeping)</option>
-            <option value="Z">Z (Zombie)</option>
-            <option value="D">D (Disk Sleep)</option>
-            <option value="T">T (Stopped)</option>
-            <option value="I">I (Idle Kernel)</option>
-          </select>
-        </div>
-
-        <div class="table-stats">
-          <span id="filteredStats">Showing 0 of 0</span>
-        </div>
-      </section>
-
-      <!-- Process Table Card -->
-      <section class="table-card">
-        <div class="table-responsive">
-          <table class="process-table" id="processTable">
-            <thead>
-              <tr>
-                <th class="col-pid" data-sort="pid">PID <span class="sort-arrow"></span></th>
-                <th class="col-ppid" data-sort="ppid">PPID <span class="sort-arrow"></span></th>
-                <th class="col-state" data-sort="state">State <span class="sort-arrow"></span></th>
-                <th class="col-class" data-sort="classification">Classification <span class="sort-arrow"></span></th>
-                <th class="col-name" data-sort="name">Process Name <span class="sort-arrow"></span></th>
-                <th class="col-actions">Details</th>
-              </tr>
-            </thead>
-            <tbody id="processTableBody">
-              <tr>
-                <td colspan="6" class="state-cell">
-                  <div class="loading-spinner"></div>
-                  <span>Connecting to ProcessScope scanner...</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Footer Meta -->
-        <div class="table-footer">
-          <div class="footer-note">
-            <span>Authoritative Source: <code>/proc/[pid]/stat</code> via C scanner</span>
-          </div>
-          <div class="footer-timestamp">
-            Last scan: <span id="lastScanTime">Never</span>
+            <h3 class="d-title">Controlled Demonstration Harness</h3>
+            <p class="d-text">
+              To definitively prove lifecycle transitions, ProcessScope provides two standalone C programs: <code>zombie_demo</code> (holds child un-reaped until input, then cleans up with <code>waitpid()</code>) and <code>orphan_demo</code> (proves child reparenting after parent exit with automatic timeout).
+            </p>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Process Detail Modal -->
-    <div class="modal-backdrop" id="detailModal" style="display: none;">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 class="modal-title" id="modalTitle">Process Inspection</h3>
-          <button class="modal-close-btn" id="closeDetailModalBtn">&times;</button>
+    <!-- Sleek Futuristic Footer -->
+    <footer class="cyber-footer">
+      <div class="footer-container">
+        <div class="footer-brand">
+          <span class="f-title">PROCESSSCOPE</span>
+          <span class="f-sub">Operating Systems &amp; Systems Programming Hackathon Project</span>
         </div>
-        <div class="modal-body" id="modalBody">
-          <!-- Populated by JavaScript -->
+        <div class="footer-tech">
+          <span>Target: Ubuntu Linux</span>
+          <span class="f-dot">&bull;</span>
+          <span>Engine: C11 POSIX</span>
+          <span class="f-dot">&bull;</span>
+          <span>Gateway: Python 3 Stdlib</span>
         </div>
       </div>
-    </div>
+    </footer>
 
-    <!-- OS Concepts Reference Modal -->
-    <div class="modal-backdrop" id="theoryModal" style="display: none;">
-      <div class="modal-card modal-wide">
-        <div class="modal-header">
-          <h3 class="modal-title">Operating Systems Concepts &amp; Detection Mechanics</h3>
-          <button class="modal-close-btn" id="closeTheoryModalBtn">&times;</button>
+    <!-- Process Detail Modal -->
+    <div class="cyber-modal-backdrop" id="detailModal" style="display: none;">
+      <div class="cyber-modal-card">
+        <div class="modal-top">
+          <div class="modal-indicator">
+            <span class="modal-led"></span>
+            <span class="modal-label" id="modalTitle">PROCESS INSPECTION</span>
+          </div>
+          <button class="modal-close-icon" id="closeDetailModalBtn">&times;</button>
         </div>
-        <div class="modal-body theory-content">
-          <div class="theory-section">
-            <h4>1. Zombie Process Lifecycle (State 'Z' / Defunct)</h4>
-            <p>
-              When a Linux process finishes execution via <code>exit()</code>, the kernel frees its address space, memory pages,
-              and open file descriptors. However, its entry in the process table (the <strong>Process Control Block / PCB</strong>)
-              must remain so its parent can read its termination status code using <code>wait()</code> or <code>waitpid()</code>.
-            </p>
-            <p>
-              Until the parent reaps the child, the process exists as a <em>zombie</em>. Zombies do not consume CPU or RAM,
-              but an unchecked accumulation exhausts available PIDs (<code>/proc/sys/kernel/pid_max</code>), preventing new processes from spawning.
-            </p>
-          </div>
-
-          <div class="theory-section">
-            <h4>2. Orphan Process Reparenting</h4>
-            <p>
-              When a parent process terminates before its child, the surviving child becomes an <em>orphan</em>.
-              In Linux, the kernel automatically reparents the orphan to the ancestor init process (<strong>PID 1</strong>)
-              or an ancestor designated as a <em>subreaper</em> via <code>prctl(PR_SET_CHILD_SUBREAPER)</code> (e.g. <code>systemd --user</code>).
-            </p>
-            <p>
-              The adoptive parent periodically invokes <code>wait()</code> to reap reparented children when they eventually terminate.
-            </p>
-          </div>
-
-          <div class="theory-section">
-            <h4>3. Snapshot Heuristics vs. Controlled Verification</h4>
-            <div class="theory-callout">
-              <strong>Crucial Systems Engineering Principle:</strong> A single snapshot of <code>/proc</code> showing <code>PPID 1</code>
-              cannot mathematically prove that the process was orphaned and reparented. Legitimate system services, background daemons,
-              and init workers are spawned directly by PID 1.
-            </div>
-            <p>
-              Therefore, ProcessScope labels these snapshot entries as <strong>adopted_candidate</strong>.
-              For definitive proof of orphan reparenting, ProcessScope provides a <em>controlled experiment fixture</em>
-              (<code>make demo-orphan</code>) that monitors the process tree before and after parent termination.
-            </p>
-          </div>
+        <div class="modal-body-content" id="modalBody">
+          <!-- Populated by JavaScript -->
         </div>
       </div>
     </div>

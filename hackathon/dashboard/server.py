@@ -104,24 +104,29 @@ class ProcessScopeHandler(BaseHTTPRequestHandler):
             return
 
         # Static File Serving
-        if path in ("/", "/index.html"):
+        clean_path = path.lstrip("/")
+        if clean_path in ("", "index.html"):
             file_path = os.path.join(STATIC_DIR, "index.html")
-            content_type = "text/html; charset=utf-8"
-        elif path == "/styles.css":
-            file_path = os.path.join(STATIC_DIR, "styles.css")
-            content_type = "text/css; charset=utf-8"
-        elif path == "/app.js":
-            file_path = os.path.join(STATIC_DIR, "app.js")
-            content_type = "application/javascript; charset=utf-8"
         else:
-            self._set_headers(404, "application/json; charset=utf-8")
-            self.wfile.write(json.dumps({"error": "Not Found"}).encode("utf-8"))
-            return
+            # Prevent path traversal
+            safe_rel = os.path.normpath(clean_path).replace("\\", "/")
+            if safe_rel.startswith("../") or safe_rel.startswith(".."):
+                self._set_headers(403, "application/json; charset=utf-8")
+                self.wfile.write(json.dumps({"error": "Forbidden"}).encode("utf-8"))
+                return
+            file_path = os.path.join(STATIC_DIR, safe_rel)
 
         if not os.path.isfile(file_path):
             self._set_headers(404, "application/json; charset=utf-8")
             self.wfile.write(json.dumps({"error": "File not found"}).encode("utf-8"))
             return
+
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(file_path)
+        if not content_type:
+            content_type = "application/octet-stream"
+        if content_type.startswith("text/") or content_type in ("application/javascript", "application/json"):
+            content_type += "; charset=utf-8"
 
         try:
             with open(file_path, "rb") as f:
